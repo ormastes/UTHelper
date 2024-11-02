@@ -4,10 +4,10 @@ set(ASSEMBLY_FILE_ORIGINAL ${CMAKE_CURRENT_BINARY_DIR}/test_original.s)
 set(ASSEMBLY_FILE_TRANSFORMED ${CMAKE_CURRENT_BINARY_DIR}/test_transformed.s)
 set(OBJECT_FILE_ORIGINAL ${CMAKE_CURRENT_BINARY_DIR}/test_original.o)
 set(OBJECT_FILE_TRANSFORMED ${CMAKE_CURRENT_BINARY_DIR}/test_transformed.o)
-set(SOAB_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../plugin)
+set(SOAB_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../plugin/external_inc)
 set(CXX_EXTENSIONS -std=c++20)
 
-set(POINTCUT_VALUE test_mode)
+set(POINTCUT_VALUE ${CMAKE_CURRENT_SOURCE_DIR}/pointcut.pc) 
 
 
 # Step 1: Generate transformed source code using the plugin
@@ -16,7 +16,7 @@ set(POINTCUT_VALUE test_mode)
 # send arguments to the plugin: -Xclang -plugin-arg-saop-plugin -Xclang arg1
 add_custom_command(
   OUTPUT ${TRANSFORMED_SRC}
-  COMMAND clang++ ${CXX_EXTENSIONS} -Xclang -load -Xclang $<TARGET_FILE:SaopPlugin> -Xclang -plugin -Xclang saop-plugin  -Xclang -plugin-arg-saop-plugin -Xclang  pointcut=${POINTCUT_VALUE} -fsyntax-only -I ${SOAB_LIB_DIR} ${TEST_SRC} > ${TRANSFORMED_SRC}
+  COMMAND clang++ ${CXX_EXTENSIONS} -v -Xclang -load -Xclang $<TARGET_FILE:SaopPlugin> -Xclang -plugin -Xclang saop-plugin  -Xclang -plugin-arg-saop-plugin -Xclang  "pointcut=${POINTCUT_VALUE}" -fsyntax-only -I ${SOAB_LIB_DIR} ${TEST_SRC} > ${TRANSFORMED_SRC}
   DEPENDS ${TEST_SRC} SaopPlugin
   COMMENT "Generating transformed source code"
 )

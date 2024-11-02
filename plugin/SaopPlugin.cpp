@@ -15,8 +15,6 @@ public:
     if (PointcutText.empty()) {
       llvm::errs() << "No pointcut text provided\n";
       return nullptr;
-    } else if (PointcutText == "test_mode") {
-      return std::make_unique<WrapFunctionConsumer>(Rewrite);
     } else {
       return std::make_unique<WrapFunctionConsumer>(Rewrite, PointcutText);
     }

@@ -7,11 +7,12 @@
 #include "clang/Rewrite/Core/Rewriter.h"
 
 class WrapFunctionCallback : public clang::ast_matchers::MatchFinder::MatchCallback {
+  llvm::StringRef Id;
 public:
-  WrapFunctionCallback(clang::Rewriter &Rewrite) : Rewrite(Rewrite) {}
+  WrapFunctionCallback(clang::Rewriter &Rewrite, llvm::StringRef Id="funcDecl") : Rewrite(Rewrite), Id(Id) {}
 
   virtual void run(const clang::ast_matchers::MatchFinder::MatchResult &Result) {
-    const clang::FunctionDecl *Func = Result.Nodes.getNodeAs<clang::FunctionDecl>("funcDecl");
+    const clang::FunctionDecl *Func = Result.Nodes.getNodeAs<clang::FunctionDecl>(Id);
     if (!Func || Func->isImplicit())
       return;
     //llvm::outs() << "Processing function: " << Func->getNameAsString() << "\n";
@@ -154,7 +155,7 @@ private:
       if (!Func->getReturnType()->isVoidType()) {
         OS << "return ";
       }
-      OS << "pc.around(";
+      OS << "pc.around<PointcutName::"<<Id<<">(";
       for (unsigned i = 0; i < Func->getNumParams(); ++i) {
         if (i > 0)
           OS << ", ";
@@ -195,7 +196,7 @@ private:
       if (!Func->getReturnType()->isVoidType()) {
         OS << "return ";
       }
-      OS << "pc.around(";
+      OS << "pc.around<PointcutName::"<<Id<<">(";
       for (unsigned i = 0; i < Func->getNumParams(); ++i) {
         if (i > 0)
           OS << ", ";

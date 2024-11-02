@@ -4,6 +4,8 @@
 #include <utility>
 #include <functional>
 
+enum class PointcutName;
+
 // Pointcut structure to hold function pointer and size
 template<typename RT, typename... Args>
 class Pointcut {
@@ -27,23 +29,8 @@ public:
         : func(nullptr), mem_func(mf), obj_ptr(obj), func_size(size) {}
 
     // General 'around' function template
-    RT around(Args&&... args) {
-        if constexpr (!std::is_void_v<RT>) {
-            RT result;
-            if (func) {
-                result = std::invoke(func, std::forward<Args>(args)...);
-            } else if (mem_func && obj_ptr) {
-                result = mem_func(obj_ptr, std::forward<Args>(args)...);
-            }
-            return result;
-        } else {
-            if (func) {
-                std::invoke(func, std::forward<Args>(args)...);
-            } else if (mem_func && obj_ptr) {
-                mem_func(obj_ptr, std::forward<Args>(args)...);
-            }
-        }
-    }
+    template<PointcutName Id> 
+    RT around(Args&&... args) ;
 };
 
 // Function to create a Pointcut for free functions and static member functions
@@ -63,4 +50,34 @@ constexpr auto createPointcut(RT(ClassType::*func)(Args...), ClassType* obj, cha
     return Pointcut<RT, Args...>(mf, obj, static_cast<std::size_t>(func_end - func_start));
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Inside saopImpl.h, which is on include path.
+// You need to define enum class element for each pointcut name. (Here funcDecl)
+// example: clang ...... -Xclang pointcut="run_pointcut funcDecl = pragma_clang(text, data) || annotation(wrap);"
+// enum class PointcutName {funcDecl};
+//
+// General 'around' function template.
+// Also, This function should implemented for your specific use case.
+// You need to include this soap.h in your soapImpl.h, and implement this function.
+/*
+template<typename RT, typename... Args>
+RT Pointcut<RT, Args...>::around(Args&&... args) {
+    if constexpr (!std::is_void_v<RT>) {
+        RT result;
+        if (func) {
+            result = std::invoke(func, std::forward<Args>(args)...);
+        } else if (mem_func && obj_ptr) {
+            result = mem_func(obj_ptr, std::forward<Args>(args)...);
+        }
+        return result;
+    } else {
+        if (func) {
+            std::invoke(func, std::forward<Args>(args)...);
+        } else if (mem_func && obj_ptr) {
+            mem_func(obj_ptr, std::forward<Args>(args)...);
+        }
+    }
+}
+
+*/
 

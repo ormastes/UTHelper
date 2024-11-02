@@ -15,6 +15,7 @@ target_include_directories(SaopPlugin PRIVATE
     ${LLVM_INCLUDE_DIRS}
     ${CLANG_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/parser  # Include parser headers
+    ${CMAKE_CURRENT_SOURCE_DIR}/parser/external_inc
 )
 
 # Link against the parser library and Clang libraries
