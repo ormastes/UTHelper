@@ -1,9 +1,15 @@
+// Grammar for Pointcut Declarations
+
 // Top-Level Pointcut List
-pointcut_list ::= pointcut_declaration { pointcut_declaration }  // at least one pointcut_declaration
+pointcut_list ::= { comment | pointcut_declaration } // zero or more, at least one enforced by parser
 
 // Pointcut Declarations
-pointcut_declaration ::= [ "export" ] pointcut_name "=" pointcut_expr ";"
+pointcut_declaration ::= [ "export" ] pointcut_type pointcut_name "=" pointcut_expr ";"
 
+// Pointcut Types
+pointcut_type ::= "run_pointcut" | "call_pointcut"
+
+// Pointcut Names
 pointcut_name ::= identifier
 
 // Comments
@@ -12,15 +18,9 @@ comment ::= "#" { any_character_except_newline } newline
 // Pointcut Expressions
 pointcut_expr ::= or_expr
 
-or_expr ::= and_expr or_expr'
+or_expr ::= and_expr { "||" and_expr }
 
-or_expr' ::= "||" and_expr or_expr'
-           | ε
-
-and_expr ::= unary_expr and_expr'
-
-and_expr' ::= "&&" unary_expr and_expr'
-            | ε
+and_expr ::= unary_expr { "&&" unary_expr }
 
 unary_expr ::= "!" unary_expr
              | primary_expr
@@ -29,85 +29,25 @@ primary_expr ::= "(" pointcut_expr ")"
                | pointcut_primary
 
 // Pointcut Primary Expressions
-pointcut_primary ::= call_expression
-                   | run_expression
-                   | within_expression
+pointcut_primary ::= func_expression
                    | pragma_clang_expression
                    | annotation_expression
                    | annotation_analysis_expression
 
-// Call Expression
-call_expression ::= "call" "(" function_signature ")"
-
-// run Expression
-run_expression ::= "run" "(" function_signature ")"
-
-// Within Expression
-within_expression ::= "within" "(" scope_specifier ")"
+// Function Expression
+func_expression ::= "func" "(" identifier ")"
 
 // Pragma Clang Expression
-pragma_clang_expression ::= "pragma_clang" "(" pragma_kind "," identifier_ellipsis ")"
+pragma_clang_expression ::= "pragma_clang" "(" pragma_kind "," identifier ")"
 
+// Annotation Expression
+annotation_expression ::= "annotation" "(" identifier ")"
+
+// Annotation Analysis Expression
+annotation_analysis_expression ::= "annotation_analysis" "(" identifier ")"
+
+// Pragma Kind
 pragma_kind ::= "bss" | "data" | "relro" | "rodata" | "text"
 
-// Scope Specifier
-scope_specifier ::= identifier_ellipsis
-
-// Function Signature
-function_signature ::= function_name "(" parameter_list ")" [ "=>" return_type ]
-
-// Optional Attributes
-annotation_expression ::= "annotation" "(" identifier_ellipsis ")"
-
-annotation_analysis_expression ::= "annotation_analysis" "(" identifier_ellipsis ")"
-
-// Return Type
-return_type ::= type_specifier
-
-// Parameter List
-parameter_list ::= parameter_types
-                 | "..."
-                 | ε
-
-parameter_types ::= type_specifier parameter_types'
-
-parameter_types' ::= "," type_specifier parameter_types'
-                   | ε
-
-// Function Name
-function_name ::= identifier_ellipsis
-
-// Type Qualifier
-type_qualifier ::= "const" | "static" | "register" | "volatile" | "restrict"
-
-// Type Specifier
-type_specifier ::= [ type_qualifier ] listed_identifier_ellipsis
-
-// Listed Identifier Ellipsis
-listed_identifier_ellipsis ::= "..." [ listed_type ]
-                             | listed_type "..."
-                             | listed_type
-
-// Listed Type
-listed_type ::= identifier { identifier }   // e.g., "unsigned long long int"
-
-// Identifier Ellipsis (for attributes)
-identifier_ellipsis ::= "..." [ identifier ]
-                      | identifier "..."
-                      | identifier
-
-// Identifier Definitions
-identifier ::= namespace_letter { namespace_letter_or_digit }
-
-namespace_letter_or_digit ::= namespace_letter | digit | "_"
-
-namespace_letter ::= letter | ":"
-
-letter ::= "a" | "b" | "c" | ... | "z" | "A" | "B" | "C" | ... | "Z"
-
-digit ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-
-// Any Character Except Newline
-any_character_except_newline ::= any character except newline
-
-newline ::= "\n" | "\r\n"
+// Identifiers and Tokens
+identifier ::= [a-zA-Z_][a-zA-Z0-9_]*

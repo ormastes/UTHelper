@@ -5,6 +5,7 @@ set(ASSEMBLY_FILE_TRANSFORMED ${CMAKE_CURRENT_BINARY_DIR}/test_transformed.s)
 set(OBJECT_FILE_ORIGINAL ${CMAKE_CURRENT_BINARY_DIR}/test_original.o)
 set(OBJECT_FILE_TRANSFORMED ${CMAKE_CURRENT_BINARY_DIR}/test_transformed.o)
 set(SOAB_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../plugin/external_inc)
+set(CUR_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(CXX_EXTENSIONS -std=c++20)
 
 set(POINTCUT_VALUE ${CMAKE_CURRENT_SOURCE_DIR}/pointcut.pc) 
@@ -28,7 +29,7 @@ add_custom_target(generate_transformed_source
 # Step 2: Generate assembly from the transformed source code
 add_custom_command(
   OUTPUT ${ASSEMBLY_FILE_TRANSFORMED}
-  COMMAND clang++ ${CXX_EXTENSIONS} -S ${TRANSFORMED_SRC} -I ${SOAB_LIB_DIR} -o ${ASSEMBLY_FILE_TRANSFORMED}
+  COMMAND clang++ ${CXX_EXTENSIONS} -S ${TRANSFORMED_SRC} -I ${CUR_INCLUDE_DIR} -I ${SOAB_LIB_DIR} -o ${ASSEMBLY_FILE_TRANSFORMED}
   DEPENDS ${TRANSFORMED_SRC} SaopPlugin
   COMMENT "Generating assembly from transformed source code"
 )
@@ -43,7 +44,7 @@ add_dependencies(generate_assembly_transformed generate_transformed_source)
 # Step 3: Compile the transformed source code to produce an object file
 add_custom_command(
   OUTPUT ${OBJECT_FILE_TRANSFORMED}
-  COMMAND clang++ ${CXX_EXTENSIONS} -c ${TRANSFORMED_SRC} -I ${SOAB_LIB_DIR} -o ${OBJECT_FILE_TRANSFORMED}
+  COMMAND clang++ ${CXX_EXTENSIONS} -c ${TRANSFORMED_SRC} -I ${CUR_INCLUDE_DIR} -I ${SOAB_LIB_DIR} -o ${OBJECT_FILE_TRANSFORMED}
   DEPENDS ${TRANSFORMED_SRC} SaopPlugin
   COMMENT "Compiling transformed source code to object file"
 )
@@ -57,7 +58,7 @@ add_dependencies(compile_transformed_to_object generate_transformed_source)
 # Step 4: Generate assembly from the original source code (without the plugin)
 add_custom_command(
   OUTPUT ${ASSEMBLY_FILE_ORIGINAL}
-  COMMAND clang++ ${CXX_EXTENSIONS} -S ${TEST_SRC} -I ${SOAB_LIB_DIR} -o ${ASSEMBLY_FILE_ORIGINAL}
+  COMMAND clang++ ${CXX_EXTENSIONS} -S ${TEST_SRC} -I ${CUR_INCLUDE_DIR} -I ${SOAB_LIB_DIR} -o ${ASSEMBLY_FILE_ORIGINAL}
   DEPENDS ${TEST_SRC} SaopPlugin
   COMMENT "Generating assembly from original source code"
 )
@@ -69,7 +70,7 @@ add_custom_target(generate_assembly_original
 # Step 5: Compile the original source code to produce an object file (without the plugin)
 add_custom_command(
   OUTPUT ${OBJECT_FILE_ORIGINAL}
-  COMMAND clang++ ${CXX_EXTENSIONS} -c ${TEST_SRC} -I ${SOAB_LIB_DIR} -o ${OBJECT_FILE_ORIGINAL}
+  COMMAND clang++ ${CXX_EXTENSIONS} -c ${TEST_SRC} -I ${CUR_INCLUDE_DIR} -I ${SOAB_LIB_DIR} -o ${OBJECT_FILE_ORIGINAL}
   DEPENDS ${TEST_SRC} SaopPlugin
   COMMENT "Compiling original source code to object file"
 )
@@ -81,7 +82,7 @@ add_custom_target(compile_original_to_object
 # Build binary from the object files and run
 add_executable(test_transformed ${TRANSFORMED_SRC})
 set_target_properties(test_transformed PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-target_include_directories(test_transformed PRIVATE ${SOAB_LIB_DIR})
+target_include_directories(test_transformed PRIVATE ${CUR_INCLUDE_DIR} ${SOAB_LIB_DIR})
 
 # run the tests
 add_custom_target(run_test_transformed
@@ -91,11 +92,10 @@ add_custom_target(run_test_transformed
 
 # dump ast of source code
 add_custom_target(dump_ast
-  COMMAND clang++ -Xclang -ast-dump -fsyntax-only -I${SOAB_LIB_DIR} ${TEST_SRC} > ${CMAKE_CURRENT_BINARY_DIR}/test.ast 
+  COMMAND clang++ -Xclang -ast-dump -fsyntax-only -I ${CUR_INCLUDE_DIR} -I${SOAB_LIB_DIR} ${TEST_SRC} > ${CMAKE_CURRENT_BINARY_DIR}/test.ast 
   DEPENDS ${TEST_SRC} SaopPlugin
 )
 
-#add_subdirectory(parser)
 
 # Build all targets when building 'make all' in the test directory
 add_custom_target(system_test
@@ -107,4 +107,22 @@ add_custom_target(system_test
     compile_original_to_object
     run_test_transformed
     #ParserTests
+)
+
+# Enable testing
+enable_testing()
+
+
+# Add CTest test
+add_test(
+    NAME system_test_wrapped_function
+    COMMAND test_transformed
+)
+
+# Define what constitutes a passing test by checking output
+set_tests_properties(system_test_wrapped_function PROPERTIES
+    PASS_REGULAR_EXPRESSION "Before proceeding in Pointcut::around."
+    PASS_REGULAR_EXPRESSION "Proceeding with original function logic. foo:42"
+    PASS_REGULAR_EXPRESSION "After proceeding in Pointcut::around."
+    PASS_REGULAR_EXPRESSION "Test Passed: Wrapped function executed correctly."
 )

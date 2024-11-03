@@ -30,8 +30,29 @@ public:
 
     // General 'around' function template
     template<PointcutName Id> 
-    RT around(Args&&... args) ;
+    RT around(Args&&... args);
+
+    RT proceed(Args&&... args);
 };
+
+template<typename RT, typename... Args>
+RT Pointcut<RT, Args...>::proceed(Args&&... args) {
+    if constexpr (!std::is_void_v<RT>) {
+        RT result;
+        if (func) {
+            result = std::invoke(func, std::forward<Args>(args)...);
+        } else if (mem_func && obj_ptr) {
+            result = mem_func(obj_ptr, std::forward<Args>(args)...);
+        }
+        return result;
+    } else {
+        if (func) {
+            std::invoke(func, std::forward<Args>(args)...);
+        } else if (mem_func && obj_ptr) {
+            mem_func(obj_ptr, std::forward<Args>(args)...);
+        }
+    }
+}
 
 // Function to create a Pointcut for free functions and static member functions
 template<typename RT, typename... Args>
@@ -54,30 +75,24 @@ constexpr auto createPointcut(RT(ClassType::*func)(Args...), ClassType* obj, cha
 // Inside saopImpl.h, which is on include path.
 // You need to define enum class element for each pointcut name. (Here funcDecl)
 // example: clang ...... -Xclang pointcut="run_pointcut funcDecl = pragma_clang(text, data) || annotation(wrap);"
-// enum class PointcutName {funcDecl};
+/*
+enum class PointcutName {funcDecl};
+*/
 //
 // General 'around' function template.
 // Also, This function should implemented for your specific use case.
 // You need to include this soap.h in your soapImpl.h, and implement this function.
 /*
 template<typename RT, typename... Args>
+template<PointcutName Id> 
 RT Pointcut<RT, Args...>::around(Args&&... args) {
+    // Do your pre-processing here
     if constexpr (!std::is_void_v<RT>) {
-        RT result;
-        if (func) {
-            result = std::invoke(func, std::forward<Args>(args)...);
-        } else if (mem_func && obj_ptr) {
-            result = mem_func(obj_ptr, std::forward<Args>(args)...);
-        }
-        return result;
+        return proceed(std::forward<Args>(args)...);
     } else {
-        if (func) {
-            std::invoke(func, std::forward<Args>(args)...);
-        } else if (mem_func && obj_ptr) {
-            mem_func(obj_ptr, std::forward<Args>(args)...);
-        }
+        proceed(std::forward<Args>(args)...);
     }
+    //  Do your post-processing here
 }
-
 */
 
