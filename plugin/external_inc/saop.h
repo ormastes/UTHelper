@@ -65,9 +65,7 @@ template<typename RT, typename ClassType, typename... Args>
 constexpr auto createPointcut(RT(ClassType::*func)(Args...), ClassType* obj, char* func_start, char* func_end) {
     using MemFuncType = RT(*)(void*, Args...);
     // Convert member function pointer to a callable function pointer
-    MemFuncType mf = [func](void* obj_ptr, Args... args) -> RT {
-        return (static_cast<ClassType*>(obj_ptr)->*func)(std::forward<Args>(args)...);
-    };
+    MemFuncType mf = (MemFuncType)(*(void**)&func);
     return Pointcut<RT, Args...>(mf, obj, static_cast<std::size_t>(func_end - func_start));
 }
 

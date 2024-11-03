@@ -21,6 +21,7 @@ private:
                                    const std::string &OriginalName,
                                    const std::string &WrappedName,
                                    const std::string &QualifiedName,
+                                   const std::string &QualifiedNameUnderbar,
                                    bool IsMethod, bool IsVirtual,
                                    bool IsConstMethod, bool IsStaticMethod,
                                    const std::string &ClassName, llvm::StringRef Id);

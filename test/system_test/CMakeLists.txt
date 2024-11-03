@@ -124,5 +124,11 @@ set_tests_properties(system_test_wrapped_function PROPERTIES
     PASS_REGULAR_EXPRESSION "Before proceeding in Pointcut::around."
     PASS_REGULAR_EXPRESSION "Proceeding with original function logic. foo:42"
     PASS_REGULAR_EXPRESSION "After proceeding in Pointcut::around."
+    PASS_REGULAR_EXPRESSION "Before proceeding in Pointcut::around."
+    PASS_REGULAR_EXPRESSION "Proceeding with original function logic. Bar:"
+    PASS_REGULAR_EXPRESSION "After proceeding in Pointcut::around."
+    PASS_REGULAR_EXPRESSION "Before proceeding in Pointcut::around."
+    PASS_REGULAR_EXPRESSION "Proceeding with original function logic. Foo:"
+    PASS_REGULAR_EXPRESSION "After proceeding in Pointcut::around."
     PASS_REGULAR_EXPRESSION "Test Passed: Wrapped function executed correctly."
 )
