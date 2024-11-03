@@ -2,6 +2,9 @@
 
 #include "Token.h"
 #include <memory>
+#include <string>
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/ADT/StringRef.h"
 
 class PointcutDeclaration;
 class OrExpression;
@@ -42,23 +45,18 @@ class ASTNode {
 public:
     virtual ~ASTNode() = default;
     virtual void print(llvm::raw_ostream &OS, int indent = 0) const = 0;
-    virtual string getClassName() const = 0;
-    virtual ASTVisitor& accept(ASTVisitor &visitor) =0;
+    virtual std::string getClassName() const = 0;
+    virtual ASTVisitor& accept(ASTVisitor &visitor) = 0;
 };
-
 
 class Expression : public ASTNode {
 public:
     ASTNodePtr expr;
 
-    Expression(ASTNodePtr e)
-        : expr(std::move(e)) {}
+    Expression(ASTNodePtr e);
 
-    void print(llvm::raw_ostream &OS, int indent = 0) const override {
-        OS.indent(indent) << getClassName() << ":\n";
-        expr->print(OS, indent + 2);
-    }
-    //virtual ASTVisitor& accept(ASTVisitor &visitor) override {visitor.visit(this); return visitor;}
+    void print(llvm::raw_ostream &OS, int indent = 0) const override;
+    // virtual ASTVisitor& accept(ASTVisitor &visitor) override;
 };
 
 class PairExpression : public ASTNode {
@@ -66,28 +64,20 @@ public:
     ASTNodePtr left;
     ASTNodePtr right;
 
-    PairExpression(ASTNodePtr lhs, ASTNodePtr rhs)
-        : left(std::move(lhs)), right(std::move(rhs)) {}
+    PairExpression(ASTNodePtr lhs, ASTNodePtr rhs);
 
-
-    void print(llvm::raw_ostream &OS, int indent = 0) const override {
-        OS.indent(indent) << getClassName() << ":\n";
-        left->print(OS, indent + 2);
-        right->print(OS, indent + 2);
-    }
-    //virtual ASTVisitor& accept(ASTVisitor &visitor) override {visitor.visit(this); return visitor;}
+    void print(llvm::raw_ostream &OS, int indent = 0) const override;
+    // virtual ASTVisitor& accept(ASTVisitor &visitor) override;
 };
 
 class IdExpression : public ASTNode {
 public:
     llvm::StringRef id;
 
-    IdExpression(llvm::StringRef id) : id(id) {}
+    IdExpression(llvm::StringRef id);
 
-    void print(llvm::raw_ostream &OS, int indent = 0) const override {
-        OS.indent(indent) << getClassName() <<": " << id << "\n";
-    }
-    //virtual ASTVisitor& accept(ASTVisitor &visitor) override {visitor.visit(this); return visitor;}
+    void print(llvm::raw_ostream &OS, int indent = 0) const override;
+    // virtual ASTVisitor& accept(ASTVisitor &visitor) override;
 };
 
 class PointcutDeclaration : public ASTNode {
@@ -97,71 +87,52 @@ public:
     MatchKind matchKind;
     ASTNodePtr expression;
 
-    PointcutDeclaration(bool exported, llvm::StringRef n, MatchKind matchKind, ASTNodePtr expr)
-        : isExported(exported), name(n), matchKind(matchKind), expression(std::move(expr)) {}
+    PointcutDeclaration(bool exported, llvm::StringRef n, MatchKind matchKind, ASTNodePtr expr);
 
-    virtual string getClassName() const override {
-        return "PointcutDeclaration";
-    }
+    std::string getClassName() const override;
 
-    void print(llvm::raw_ostream &OS, int indent = 0) const override {
-        OS.indent(indent) << (isExported ? "export " : "") << getClassName() << ": " << name << "\n";
-        if (expression) {
-            expression->print(OS, indent + 2);
-        }
-    }
-    virtual ASTVisitor& accept(ASTVisitor &visitor) override {visitor.visit(this); return visitor;}
+    void print(llvm::raw_ostream &OS, int indent = 0) const override;
+    ASTVisitor& accept(ASTVisitor &visitor) override;
 };
-
 
 class OrExpression : public PairExpression {
 public:
-    OrExpression(ASTNodePtr lhs, ASTNodePtr rhs)
-        : PairExpression(std::move(lhs), std::move(rhs)) {}
-    virtual string getClassName() const override {
-        return "OrExpression";
-    }
-    virtual ASTVisitor& accept(ASTVisitor &visitor) override {visitor.visit(this); return visitor;}
+    OrExpression(ASTNodePtr lhs, ASTNodePtr rhs);
+
+    std::string getClassName() const override;
+    ASTVisitor& accept(ASTVisitor &visitor) override;
 };
 
 class AndExpression : public PairExpression {
 public:
-    AndExpression(ASTNodePtr lhs, ASTNodePtr rhs)
-        : PairExpression(std::move(lhs), std::move(rhs)) {}
-    virtual string getClassName() const override {
-        return "AndExpression";
-    }
-    virtual ASTVisitor& accept(ASTVisitor &visitor) override {visitor.visit(this); return visitor;}
+    AndExpression(ASTNodePtr lhs, ASTNodePtr rhs);
+
+    std::string getClassName() const override;
+    ASTVisitor& accept(ASTVisitor &visitor) override;
 };
 
 class NotExpression : public Expression {
 public:
-    NotExpression(ASTNodePtr e)
-        : Expression(std::move(e)) {}
-    virtual string getClassName() const override {
-        return "NotExpression";
-    }
-    virtual ASTVisitor& accept(ASTVisitor &visitor) override {visitor.visit(this); return visitor;}
+    NotExpression(ASTNodePtr e);
+
+    std::string getClassName() const override;
+    ASTVisitor& accept(ASTVisitor &visitor) override;
 };
 
 class ParenthesizedExpression : public Expression {
 public:
-    ParenthesizedExpression(ASTNodePtr e)
-        : Expression(std::move(e)) {}
-    virtual string getClassName() const override {
-        return "ParenthesizedExpression";
-    }
-    virtual ASTVisitor& accept(ASTVisitor &visitor) override {visitor.visit(this); return visitor;}
+    ParenthesizedExpression(ASTNodePtr e);
+
+    std::string getClassName() const override;
+    ASTVisitor& accept(ASTVisitor &visitor) override;
 };
 
 class FuncExpression : public IdExpression {
 public:
-    FuncExpression(llvm::StringRef id)
-        : IdExpression(id) {}
-    virtual string getClassName() const override {
-        return "FuncExpression";
-    }
-    virtual ASTVisitor& accept(ASTVisitor &visitor) override {visitor.visit(this); return visitor;}
+    FuncExpression(llvm::StringRef id);
+
+    std::string getClassName() const override;
+    ASTVisitor& accept(ASTVisitor &visitor) override;
 };
 
 class PragmaClangExprNode : public ASTNode {
@@ -169,38 +140,29 @@ public:
     Token pragmaKind;
     llvm::StringRef sectionName;
 
-    PragmaClangExprNode(Token kind, llvm::StringRef section)
-        : pragmaKind(kind), sectionName(section) {}
+    PragmaClangExprNode(Token kind, llvm::StringRef section);
 
-    virtual string getClassName() const override {
-        return "PragmaClangExprNode";
-    }
+    std::string getClassName() const override;
 
-    void print(llvm::raw_ostream &OS, int indent = 0) const override {
-        OS.indent(indent) << getClassName() << ": " << pragmaKind << ", " << sectionName << "\n";
-    }
+    void print(llvm::raw_ostream &OS, int indent = 0) const override;
 
-    virtual ASTVisitor& accept(ASTVisitor &visitor) override {visitor.visit(this); return visitor;}
+    ASTVisitor& accept(ASTVisitor &visitor) override;
 };
 
 class NotationExprNode : public IdExpression {
 public:
-    NotationExprNode(llvm::StringRef id)
-        : IdExpression(std::move(id)) {}
-    virtual string getClassName() const override {
-        return "NotationExprNode";
-    }
+    NotationExprNode(llvm::StringRef id);
 
-    virtual ASTVisitor& accept(ASTVisitor &visitor) override {visitor.visit(this); return visitor;}
+    std::string getClassName() const override;
+
+    ASTVisitor& accept(ASTVisitor &visitor) override;
 };
 
 class NotationAnalysisExprNode : public IdExpression {
 public:
-    NotationAnalysisExprNode(llvm::StringRef id)
-        : IdExpression(std::move(id)) {}
-    virtual string getClassName() const override {
-        return "NotationAnalysisExprNode";
-    }
+    NotationAnalysisExprNode(llvm::StringRef id);
 
-    virtual ASTVisitor& accept(ASTVisitor &visitor) override {visitor.visit(this); return visitor;}
+    std::string getClassName() const override;
+
+    ASTVisitor& accept(ASTVisitor &visitor) override;
 };

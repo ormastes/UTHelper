@@ -1,5 +1,29 @@
 #include "Token.h"
 
+Token::Token(const char* s) : Token(llvm::StringRef(s)) {}
+Token::Token(TokenKind k, llvm::StringRef t) : kind(k), text(t) {}
+
+//make std::out printable with text if it is not empty
+llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, const Token &T) {
+    OS << Token::toTwine(T.kind) << ": " << T.kind << " ";
+    if (!T.text.empty()) {
+        OS << " (" << T.text << ")";
+    }
+    return OS;
+}
+
+bool Token::operator==(TokenKind k) const { return kind == k; }
+
+bool Token::operator==(llvm::StringRef t) const { return text == t; }
+
+const bool Token::operator==(Token& other) const { return kind == other.kind && text == other.text; }
+
+bool Token::operator<(const Token& other) const {
+    return kind < other.kind || (kind == other.kind && text < other.text);
+}
+// cast to bool
+Token::operator bool() const { return kind != TOK_EOF; }
+
 
 auto Token::toStr(TokenKind type) { 
     switch (type) {
@@ -27,7 +51,28 @@ Token::Token(StringRef s) : kind(Token::toTokenKind.at(s)), text(s) {}
 
 const Token EOF_TOKEN(TOK_EOF);
 
+ParenOpenToken::ParenOpenToken(const char* cur, const char* pairParent) : Token(TOK_LPAREN, llvm::StringRef(cur, pairParent-cur)) {}
 
+bool ParenOpenToken::operator==(TokenKind k) const { return kind == k; }
+bool ParenOpenToken::operator==(const Token& other) const {
+    return kind == other.kind && text == other.text;
+}
+bool ParenOpenToken::operator==(const ParenOpenToken& other) const {
+    return kind == other.kind && text == other.text;
+}
+
+KeywordToken::KeywordToken(TokenKind k) : Token(k){}
+KeywordToken::KeywordToken(llvm::StringRef t) : Token(keywords.lookup(t), t) {}
+bool KeywordToken::isKeyword(llvm::StringRef text) {
+    return keywords.count(text);
+}
+bool KeywordToken::operator==(TokenKind k) const { return kind == k; }
+bool KeywordToken::operator==(const Token& other) const {
+    return kind == other.kind && text == other.text;
+}
+bool KeywordToken::operator==(const KeywordToken& other) const {
+    return kind == other.kind && text == other.text;
+}
 
 
 // _TokenKindToStr(TOK_POINTCUT) and TOK_POINTCUT map initialization

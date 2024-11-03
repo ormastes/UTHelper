@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CommonHeader.h"
+#include "Common.h"
 
 // Token kinds enumeration
 enum TokenKind {
@@ -21,47 +21,27 @@ struct Token : public std::less<Token> {
     llvm::StringRef text;
     
     Token(TokenKind k);
-    Token(StringRef s) ;
-    Token(const char* s) : Token(llvm::StringRef(s)) {}
-    Token(TokenKind k, llvm::StringRef t) : kind(k), text(t) {}
+    Token(StringRef s);
+    Token(const char* s);
+    Token(TokenKind k, llvm::StringRef t);
     
     //make std::out printable with text if it is not empty
-    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, const Token &T) {
-        OS << toTwine(T.kind) << ": " << T.kind << " ";
-        if (!T.text.empty()) {
-            OS << " (" << T.text << ")";
-        }
-        return OS;
-    }
-
-    bool operator==(TokenKind k) const { return kind == k; }
-
-    bool operator==(llvm::StringRef t) const { return text == t; }
-
-    const bool operator==(Token& other) const { return kind == other.kind && text == other.text; }
-
-    bool operator<(const Token& other) const {
-        return kind < other.kind || (kind == other.kind && text < other.text);
-    }
+    friend llvm::raw_ostream& operator<<(llvm::raw_ostream &OS, const Token &T);
+    bool operator==(TokenKind k) const;
+    bool operator==(llvm::StringRef t) const;
+    const bool operator==(Token& other) const;
+    bool operator<(const Token& other) const ;
     // cast to bool
-    operator bool() const { return kind != TOK_EOF; }
+    operator bool() const;
 };
-
 
 extern const Token EOF_TOKEN;
 
-
 struct ParenOpenToken : public Token {
-    ParenOpenToken(const char* cur, const char* pairParent) : Token(TOK_LPAREN, llvm::StringRef(cur, pairParent-cur)) {}
-
-    bool operator==(TokenKind k) const { return kind == k; }
-    bool operator==(const Token& other) const {
-        return kind == other.kind && text == other.text;
-    }
-    bool operator==(const ParenOpenToken& other) const {
-        return kind == other.kind && text == other.text;
-    }
-
+    ParenOpenToken(const char* cur, const char* pairParent);
+    bool operator==(TokenKind k) const ;
+    bool operator==(const Token& other) const ;
+    bool operator==(const ParenOpenToken& other) const ;
 };
 
 
@@ -70,17 +50,11 @@ private:
     // Use llvm::StringSet for better performance and simplicity
     static llvm::StringMap<TokenKind> keywords;
 public:
-    KeywordToken(TokenKind k) : Token(k){}
-    KeywordToken(llvm::StringRef t) : Token(keywords.lookup(t), t) {}
-    static bool isKeyword(llvm::StringRef text) {
-        return keywords.count(text);
-    }
-    bool operator==(TokenKind k) const { return kind == k; }
-    bool operator==(const Token& other) const {
-        return kind == other.kind && text == other.text;
-    }
-    bool operator==(const KeywordToken& other) const {
-        return kind == other.kind && text == other.text;
-    }
+    KeywordToken(TokenKind k);
+    KeywordToken(llvm::StringRef t);
+    static bool isKeyword(llvm::StringRef text);
+    bool operator==(TokenKind k) const;
+    bool operator==(const Token& other) const;
+    bool operator==(const KeywordToken& other) const;
 };
 

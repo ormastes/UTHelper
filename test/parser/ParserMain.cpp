@@ -15,7 +15,7 @@
 #include "Lexer.h"
 #include "Parser.h"
 
-
+class A{public: void print(){}};
 void runLexerTests() {
     llvm::StringRef testInput1 = "call_pointcut myPointcut = func(myFunction);";
     Lexer lexer1(testInput1);

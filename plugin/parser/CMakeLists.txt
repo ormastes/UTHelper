@@ -4,6 +4,8 @@ add_compile_options(-std=c++20 -fPIC)
 add_library(SaopParser 
     Parser.cpp
     Token.cpp
+    Lexer.cpp
+    ASTNode.cpp
 
 )
 

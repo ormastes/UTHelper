@@ -5,7 +5,8 @@ add_llvm_library(SaopPlugin MODULE
   SaopPlugin.cpp
   AST2Matcher.cpp
   ASTMakeMatcherVisitor.cpp
-
+  WrapFunctionCallback.cpp
+  WrapFunctionConsumer.cpp
   PLUGIN_TOOL
   clang
 )

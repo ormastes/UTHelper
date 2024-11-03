@@ -16,7 +16,12 @@ public:
       llvm::errs() << "No pointcut text provided\n";
       return nullptr;
     } else {
-      return std::make_unique<WrapFunctionConsumer>(Rewrite, PointcutText);
+      if (auto val = std::make_unique<WrapFunctionConsumer>(Rewrite, PointcutText)) {
+        return val;
+      } else  {
+        llvm::errs() << "Failed to create WrapFunctionConsumer\n";
+        return nullptr;
+      }
     }
   }
 
