@@ -1,6 +1,8 @@
 #pragma once
 
-#include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/ASTMatchers/ASTMatchersMacros.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/Attr.h"
 
 
 AST_MATCHER_P(clang::FunctionDecl, hasPragmaClangBSSSectionAttr,

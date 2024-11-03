@@ -2,12 +2,11 @@
 
 #include <memory>
 #include "llvm/ADT/StringRef.h"
-#include "clang/ASTMatchers/ASTMatchers.h"
-#include "clang/ASTMatchers/ASTMatchFinder.h"
+
 
 #include "ASTNode.h"
 #include "ASTMakeMatcherVisitor.h"
-#include "ASTMatcherP.h"
+
 
 template <typename T>
 struct AST {

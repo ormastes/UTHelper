@@ -4,9 +4,7 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/Rewrite/Core/Rewriter.h"
-#include "llvm/ADT/StringRef.h"
 
-#include <memory>
 #include <vector>
 
 // Forward declarations
