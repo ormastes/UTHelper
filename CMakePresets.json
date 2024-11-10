@@ -16,7 +16,7 @@
                 "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_CXX_STANDARD": "20",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "comment": "CMAKE_BUILD_TYPE is not properly set. cause cmake plutin crash.",
+                "comment": "CMAKE_BUILD_TYPE is not properly set. cause cmake crash.",
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_VERBOSE_MAKEFILE": "ON"
             }
