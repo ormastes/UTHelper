@@ -1,0 +1,65 @@
+// Original source file with final classes and methods
+// This will be transformed by the plugin to be mockable
+
+#include <string>
+#include <iostream>
+
+// A final class with non-virtual methods
+class DatabaseConnection{
+  friend class DatabaseConnectionTest;
+  template<typename T> friend class DatabaseConnectionFriend;
+
+public:
+    virtual std::string connect(const std::string& host, int port) {
+        return "Connected to " + host + ":" + std::to_string(port);
+    }
+    
+    virtual bool executeQuery(const std::string& query) {
+        std::cout << "Executing: " << query << std::endl;
+        return true;
+    }
+    
+    virtual void disconnect() {
+        std::cout << "Disconnected" << std::endl;
+    }
+};
+
+// A class with final virtual methods
+class Logger {
+  friend class LoggerTest;
+  template<typename T> friend class LoggerFriend;
+
+public:
+    virtual void log(const std::string& message){
+        std::cout << "[LOG] " << message << std::endl;
+    }
+    
+    virtual int getLogLevel(){
+        return 3; // INFO level
+    }
+};
+
+// A service that uses the above classes
+class UserService {
+  friend class UserServiceTest;
+  template<typename T> friend class UserServiceFriend;
+
+private:
+    DatabaseConnection* db;
+    Logger* logger;
+    
+public:
+    UserService(DatabaseConnection* database, Logger* log) 
+        : db(database), logger(log) {}
+    
+    virtual bool createUser(const std::string& username) {
+        logger->log("Creating user: " + username);
+        std::string connResult = db->connect("localhost", 5432);
+        logger->log(connResult);
+        
+        bool result = db->executeQuery("INSERT INTO users VALUES ('" + username + "')");
+        db->disconnect();
+        
+        return result;
+    }
+};

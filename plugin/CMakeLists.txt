@@ -7,10 +7,7 @@ add_llvm_library(UTHelperPlugin MODULE
   ASTMakeMatcherVisitor.cpp
   WrapFunctionCallback.cpp
   WrapFunctionConsumer.cpp
-  RemoveFinalConsumer.cpp
-  MakeVirtualConsumer.cpp
-  AddFriendConsumer.cpp
-  CompositeConsumer.cpp
+  UnifiedASTVisitor.cpp
   PLUGIN_TOOL
   clang
 )

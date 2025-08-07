@@ -1,8 +1,5 @@
 #include "WrapFunctionConsumer.h"
-#include "RemoveFinalConsumer.h"
-#include "MakeVirtualConsumer.h"
-#include "AddFriendConsumer.h"
-#include "CompositeConsumer.h"
+#include "UnifiedASTVisitor.h"
 
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
@@ -29,21 +26,11 @@ public:
     }
     
     // Default mode: all transformations enabled unless explicitly disabled
-    auto composite = std::make_unique<CompositeConsumer>();
-    
-    if (!DisableRemoveFinal) {
-      composite->addConsumer(std::make_unique<RemoveFinalConsumer>(Rewrite, BaseFolder));
-    }
-    
-    if (!DisableMakeVirtual) {
-      composite->addConsumer(std::make_unique<MakeVirtualConsumer>(Rewrite, BaseFolder));
-    }
-    
-    if (!DisableAddFriend) {
-      composite->addConsumer(std::make_unique<AddFriendConsumer>(Rewrite, BaseFolder, CustomFriends));
-    }
-    
-    return composite;
+    return std::make_unique<UnifiedASTConsumer>(Rewrite, BaseFolder,
+                                                !DisableRemoveFinal,
+                                                !DisableMakeVirtual,
+                                                !DisableAddFriend,
+                                                CustomFriends);
   }
 
   void EndSourceFileAction() override {
