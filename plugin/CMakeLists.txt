@@ -9,6 +9,7 @@ add_llvm_library(UTHelperPlugin MODULE
   WrapFunctionConsumer.cpp
   RemoveFinalConsumer.cpp
   MakeVirtualConsumer.cpp
+  AddFriendConsumer.cpp
   CompositeConsumer.cpp
   PLUGIN_TOOL
   clang

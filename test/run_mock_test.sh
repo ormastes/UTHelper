@@ -10,12 +10,11 @@ BUILD_DIR="$PROJECT_ROOT/build"
 PLUGIN_PATH="$BUILD_DIR/plugin/UTHelperPlugin.so"
 
 echo "=== Step 1: Transform the source file ==="
-echo "Removing final keywords and making methods virtual..."
+echo "All transformations are enabled by default (remove-final, make-virtual, add-friend)..."
+echo "Using base-folder: $SCRIPT_DIR"
 
 clang++ -Xclang -load -Xclang "$PLUGIN_PATH" \
         -Xclang -plugin -Xclang uthelper \
-        -Xclang -plugin-arg-uthelper -Xclang remove-final \
-        -Xclang -plugin-arg-uthelper -Xclang make-virtual \
         -Xclang -plugin-arg-uthelper -Xclang "base-folder=$SCRIPT_DIR" \
         -fsyntax-only "$SCRIPT_DIR/test_mock_final.cpp" > "$SCRIPT_DIR/test_mock_final_transformed.h"
 

@@ -1,6 +1,7 @@
 #include "WrapFunctionConsumer.h"
 #include "RemoveFinalConsumer.h"
 #include "MakeVirtualConsumer.h"
+#include "AddFriendConsumer.h"
 #include "CompositeConsumer.h"
 
 #include "clang/Frontend/CompilerInstance.h"
@@ -14,27 +15,35 @@ public:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &CI, llvm::StringRef) override {
     Rewrite.setSourceMgr(CI.getSourceManager(), CI.getLangOpts());
     
-    // Create appropriate consumer based on mode
-    if (RemoveFinal || MakeVirtual) {
-      auto composite = std::make_unique<CompositeConsumer>();
-      
-      if (RemoveFinal) {
-        composite->addConsumer(std::make_unique<RemoveFinalConsumer>(Rewrite, BaseFolder));
-      }
-      
-      if (MakeVirtual) {
-        composite->addConsumer(std::make_unique<MakeVirtualConsumer>(Rewrite, BaseFolder));
-      }
-      
-      return composite;
-    } else if (!PointcutText.empty()) {
+    // Check if base-folder is provided (mandatory)
+    if (BaseFolder.empty()) {
+      llvm::errs() << "Error: base-folder parameter is mandatory\n";
+      return nullptr;
+    }
+    
+    // If pointcut mode is specified, use only that
+    if (!PointcutText.empty()) {
       auto consumer = std::make_unique<WrapFunctionConsumer>(Rewrite, PointcutText);
       consumer->setBaseFolder(BaseFolder);
       return consumer;
-    } else {
-      llvm::errs() << "No operation specified. Use either pointcut=<file>, remove-final, or make-virtual\n";
-      return nullptr;
     }
+    
+    // Default mode: all transformations enabled unless explicitly disabled
+    auto composite = std::make_unique<CompositeConsumer>();
+    
+    if (!DisableRemoveFinal) {
+      composite->addConsumer(std::make_unique<RemoveFinalConsumer>(Rewrite, BaseFolder));
+    }
+    
+    if (!DisableMakeVirtual) {
+      composite->addConsumer(std::make_unique<MakeVirtualConsumer>(Rewrite, BaseFolder));
+    }
+    
+    if (!DisableAddFriend) {
+      composite->addConsumer(std::make_unique<AddFriendConsumer>(Rewrite, BaseFolder, CustomFriends));
+    }
+    
+    return composite;
   }
 
   void EndSourceFileAction() override {
@@ -73,19 +82,25 @@ public:
         if (!BaseFolder.empty() && BaseFolder.back() != llvm::sys::path::get_separator()[0]) {
           BaseFolder += llvm::sys::path::get_separator();
         }
-      } else if (arg == "remove-final") {
-        RemoveFinal = true;
-      } else if (arg == "make-virtual") {
-        MakeVirtual = true;
+      } else if (arg == "disable-remove-final") {
+        DisableRemoveFinal = true;
+      } else if (arg == "disable-make-virtual") {
+        DisableMakeVirtual = true;
+      } else if (arg == "disable-add-friend") {
+        DisableAddFriend = true;
+      } else if (arg.starts_with("custom-friends=")) {
+        std::string friendsList = arg.substr(strlen("custom-friends="));
+        parseFriendsList(friendsList);
       } else {
         llvm::errs() << "Unknown argument: " << arg << "\n";
         return false;
       }
     }
     
-    // Validate that we have at least one operation
-    if (!RemoveFinal && !MakeVirtual && PointcutText.empty()) {
-      llvm::errs() << "No operation specified. Use either pointcut=<file>, remove-final, or make-virtual\n";
+    // Validate that base-folder is provided (mandatory)
+    if (BaseFolder.empty()) {
+      llvm::errs() << "Error: base-folder parameter is mandatory\n";
+      llvm::errs() << "Usage: -Xclang -plugin-arg-uthelper -Xclang base-folder=<path>\n";
       return false;
     }
     
@@ -93,11 +108,36 @@ public:
   }
 
 private:
+  void parseFriendsList(const std::string &friendsList) {
+    // Parse semicolon-separated list of friend templates
+    size_t start = 0;
+    size_t end = friendsList.find(';');
+    
+    while (end != std::string::npos) {
+      std::string friendTemplate = friendsList.substr(start, end - start);
+      if (!friendTemplate.empty()) {
+        CustomFriends.push_back({friendTemplate});
+      }
+      start = end + 1;
+      end = friendsList.find(';', start);
+    }
+    
+    // Don't forget the last one
+    if (start < friendsList.length()) {
+      std::string friendTemplate = friendsList.substr(start);
+      if (!friendTemplate.empty()) {
+        CustomFriends.push_back({friendTemplate});
+      }
+    }
+  }
+
   clang::Rewriter Rewrite;
   std::string PointcutText;
   std::string BaseFolder;
-  bool RemoveFinal = false;
-  bool MakeVirtual = false;
+  bool DisableRemoveFinal = false;
+  bool DisableMakeVirtual = false;
+  bool DisableAddFriend = false;
+  std::vector<FriendTemplate> CustomFriends;
 };
 
 static clang::FrontendPluginRegistry::Add<UTHelperAction>

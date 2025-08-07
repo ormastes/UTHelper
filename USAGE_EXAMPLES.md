@@ -1,86 +1,144 @@
 # UTHelper Plugin Usage Examples
 
-The UTHelper plugin provides multiple features for C++ code transformation.
+The UTHelper plugin transforms C++ code to improve testability. By default, all transformations are enabled.
 
-## 1. Remove Final Keywords
+## Important: base-folder is MANDATORY
 
-Remove `final` keywords from classes and methods within a specified directory:
+The `base-folder` parameter must always be provided. This ensures transformations are only applied to files within your project directory.
 
 ```bash
 clang++ -Xclang -load -Xclang path/to/UTHelperPlugin.so \
         -Xclang -plugin -Xclang uthelper \
-        -Xclang -plugin-arg-uthelper -Xclang remove-final \
         -Xclang -plugin-arg-uthelper -Xclang "base-folder=/path/to/project" \
         -fsyntax-only input.cpp > output.cpp
 ```
 
-This will:
-- Remove `final` from all classes and structs
-- Remove `final` from virtual methods
-- Only process files under `/path/to/project`
+## Default Behavior (All Features Enabled)
 
-## 2. Make Methods Virtual
-
-Convert non-virtual methods to virtual (where C++ grammar allows):
+By default, the plugin applies ALL transformations:
+1. Removes `final` keywords from classes and methods
+2. Makes methods virtual (where C++ allows)
+3. Adds friend declarations to classes/structs
 
 ```bash
+# All transformations are applied
 clang++ -Xclang -load -Xclang path/to/UTHelperPlugin.so \
         -Xclang -plugin -Xclang uthelper \
-        -Xclang -plugin-arg-uthelper -Xclang make-virtual \
         -Xclang -plugin-arg-uthelper -Xclang "base-folder=/path/to/project" \
         -fsyntax-only input.cpp > output.cpp
 ```
 
-This will:
-- Add `virtual` keyword to non-static member functions
-- Skip constructors (cannot be virtual)
-- Handle destructors appropriately
-- Skip static methods and friend functions
+## Disabling Specific Features
 
-## 3. Combined Mode for Unit Testing
+Use disable flags to turn off specific transformations:
 
-Remove final and make methods virtual in one pass (ideal for creating mockable classes):
-
+### Disable Remove Final
 ```bash
 clang++ -Xclang -load -Xclang path/to/UTHelperPlugin.so \
         -Xclang -plugin -Xclang uthelper \
-        -Xclang -plugin-arg-uthelper -Xclang remove-final \
-        -Xclang -plugin-arg-uthelper -Xclang make-virtual \
         -Xclang -plugin-arg-uthelper -Xclang "base-folder=/path/to/project" \
+        -Xclang -plugin-arg-uthelper -Xclang disable-remove-final \
         -fsyntax-only input.cpp > output.cpp
 ```
 
-This enables mocking of previously final classes with Google Mock or other mocking frameworks.
+### Disable Make Virtual
+```bash
+clang++ -Xclang -load -Xclang path/to/UTHelperPlugin.so \
+        -Xclang -plugin -Xclang uthelper \
+        -Xclang -plugin-arg-uthelper -Xclang "base-folder=/path/to/project" \
+        -Xclang -plugin-arg-uthelper -Xclang disable-make-virtual \
+        -fsyntax-only input.cpp > output.cpp
+```
 
-## 4. Function Wrapping with Pointcuts
+### Disable Add Friend
+```bash
+clang++ -Xclang -load -Xclang path/to/UTHelperPlugin.so \
+        -Xclang -plugin -Xclang uthelper \
+        -Xclang -plugin-arg-uthelper -Xclang "base-folder=/path/to/project" \
+        -Xclang -plugin-arg-uthelper -Xclang disable-add-friend \
+        -fsyntax-only input.cpp > output.cpp
+```
 
-Wrap functions based on pointcut definitions:
+### Multiple Disable Flags
+```bash
+# Only remove-final will be active
+clang++ -Xclang -load -Xclang path/to/UTHelperPlugin.so \
+        -Xclang -plugin -Xclang uthelper \
+        -Xclang -plugin-arg-uthelper -Xclang "base-folder=/path/to/project" \
+        -Xclang -plugin-arg-uthelper -Xclang disable-make-virtual \
+        -Xclang -plugin-arg-uthelper -Xclang disable-add-friend \
+        -fsyntax-only input.cpp > output.cpp
+```
+
+## Custom Friend Classes
+
+When add-friend is enabled (default), you can specify custom friend templates:
 
 ```bash
 clang++ -Xclang -load -Xclang path/to/UTHelperPlugin.so \
         -Xclang -plugin -Xclang uthelper \
+        -Xclang -plugin-arg-uthelper -Xclang "base-folder=/path/to/project" \
+        -Xclang -plugin-arg-uthelper -Xclang "custom-friends=class {namespace}::{class-name}Mock;class testing::TestFor{class-name}" \
+        -fsyntax-only input.cpp > output.cpp
+```
+
+Default friends added to each class/struct:
+- `friend class {ClassName}Test;`
+- `template<typename T> friend class {ClassName}Friend;`
+
+Template variables in custom friends:
+- `{namespace}`: Replaced with the class's namespace
+- `{class-name}`: Replaced with the class name
+
+## Pointcut Mode (Function Wrapping)
+
+Pointcut mode is separate from the default transformations. When a pointcut file is specified, ONLY function wrapping is performed:
+
+```bash
+clang++ -Xclang -load -Xclang path/to/UTHelperPlugin.so \
+        -Xclang -plugin -Xclang uthelper \
+        -Xclang -plugin-arg-uthelper -Xclang "base-folder=/path/to/project" \
         -Xclang -plugin-arg-uthelper -Xclang "pointcut=pointcut.pc" \
-        -Xclang -plugin-arg-uthelper -Xclang "base-folder=/path/to/project" \
         -fsyntax-only input.cpp > output.cpp
 ```
 
-Example pointcut file (`pointcut.pc`):
+## Complete Arguments Reference
+
+### Mandatory:
+- `base-folder=<path>`: Base directory for transformations (REQUIRED)
+
+### Optional:
+- `disable-remove-final`: Disable final keyword removal
+- `disable-make-virtual`: Disable making methods virtual
+- `disable-add-friend`: Disable adding friend declarations
+- `custom-friends=<list>`: Semicolon-separated list of friend templates
+- `pointcut=<file>`: Switch to pointcut mode (disables other transformations)
+
+## Examples
+
+### For Unit Testing with Google Mock
+```bash
+# Default: All transformations for maximum mockability
+clang++ -Xclang -load -Xclang UTHelperPlugin.so \
+        -Xclang -plugin -Xclang uthelper \
+        -Xclang -plugin-arg-uthelper -Xclang "base-folder=/my/project" \
+        -fsyntax-only MyClass.cpp > MyClass_testable.cpp
 ```
-run_pointcut funcDecl = pragma_clang(text, data) || annotation(wrap);
+
+### For Minimal Changes
+```bash
+# Only remove final keywords
+clang++ -Xclang -load -Xclang UTHelperPlugin.so \
+        -Xclang -plugin -Xclang uthelper \
+        -Xclang -plugin-arg-uthelper -Xclang "base-folder=/my/project" \
+        -Xclang -plugin-arg-uthelper -Xclang disable-make-virtual \
+        -Xclang -plugin-arg-uthelper -Xclang disable-add-friend \
+        -fsyntax-only MyClass.cpp > MyClass_nofinal.cpp
 ```
-
-## 5. Arguments
-
-- `remove-final`: Enable final keyword removal mode
-- `make-virtual`: Convert methods to virtual where possible
-- `pointcut=<file>`: Path to pointcut definition file (for function wrapping)
-- `base-folder=<path>`: Only transform files under this directory (optional)
-
-Multiple operations can be combined (e.g., `remove-final` + `make-virtual`)
 
 ## Notes
 
 - The plugin outputs transformed code to stdout
 - Use `-fsyntax-only` to avoid compilation, just transformation
-- The `base-folder` parameter accepts both absolute and relative paths
-- When no `base-folder` is specified, all files are processed
+- The base-folder ensures only your project files are modified (not system headers)
+- All features are enabled by default for maximum test coverage capability

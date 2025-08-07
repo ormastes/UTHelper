@@ -17,7 +17,7 @@ set(POINTCUT_VALUE ${CMAKE_CURRENT_SOURCE_DIR}/pointcut.pc)
 # send arguments to the plugin: -Xclang -plugin-arg-uthelper -Xclang arg1
 add_custom_command(
   OUTPUT ${TRANSFORMED_SRC}
-  COMMAND clang++ ${CXX_EXTENSIONS} -Xclang -load -Xclang $<TARGET_FILE:UTHelperPlugin> -Xclang -plugin -Xclang uthelper  -Xclang -plugin-arg-uthelper -Xclang  "pointcut=${POINTCUT_VALUE}" -fsyntax-only -I ${SOAB_LIB_DIR} ${TEST_SRC} > ${TRANSFORMED_SRC}
+  COMMAND clang++ ${CXX_EXTENSIONS} -Xclang -load -Xclang $<TARGET_FILE:UTHelperPlugin> -Xclang -plugin -Xclang uthelper  -Xclang -plugin-arg-uthelper -Xclang  "pointcut=${POINTCUT_VALUE}" -Xclang -plugin-arg-uthelper -Xclang "base-folder=${CMAKE_CURRENT_SOURCE_DIR}" -fsyntax-only -I ${SOAB_LIB_DIR} ${TEST_SRC} > ${TRANSFORMED_SRC}
   DEPENDS ${TEST_SRC} UTHelperPlugin
   COMMENT "Generating transformed source code"
 )
