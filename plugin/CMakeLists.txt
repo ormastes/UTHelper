@@ -1,18 +1,21 @@
 # Add the parser subdirectory
 add_subdirectory(parser)
 
-add_llvm_library(SaopPlugin MODULE
-  SaopPlugin.cpp
+add_llvm_library(UTHelperPlugin MODULE
+  UTHelperPlugin.cpp
   AST2Matcher.cpp
   ASTMakeMatcherVisitor.cpp
   WrapFunctionCallback.cpp
   WrapFunctionConsumer.cpp
+  RemoveFinalConsumer.cpp
+  MakeVirtualConsumer.cpp
+  CompositeConsumer.cpp
   PLUGIN_TOOL
   clang
 )
 
 # Include directories
-target_include_directories(SaopPlugin PRIVATE
+target_include_directories(UTHelperPlugin PRIVATE
     ${LLVM_INCLUDE_DIRS}
     ${CLANG_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/parser  # Include parser headers
@@ -20,7 +23,7 @@ target_include_directories(SaopPlugin PRIVATE
 )
 
 # Link against the parser library and Clang libraries
-target_link_libraries(SaopPlugin PRIVATE
+target_link_libraries(UTHelperPlugin PRIVATE
     SaopParser
     clangAST
     clangASTMatchers
@@ -29,4 +32,4 @@ target_link_libraries(SaopPlugin PRIVATE
     clangParse
 )
 
-add_dependencies(SaopPlugin SaopParser)
+add_dependencies(UTHelperPlugin SaopParser)

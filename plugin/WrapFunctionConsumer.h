@@ -17,9 +17,12 @@ public:
     WrapFunctionConsumer(clang::Rewriter &R, const std::string &PointcutTextFile);
 
     void HandleTranslationUnit(clang::ASTContext &Context) override;
+    
+    void setBaseFolder(const std::string &BaseFolder);
 
 private:
     WrapFunctionCallback Handler;
     clang::ast_matchers::MatchFinder Matcher;
     std::vector<clang::ast_matchers::DeclarationMatcher> matcher_decl;
+    std::string BaseFolder;
 };

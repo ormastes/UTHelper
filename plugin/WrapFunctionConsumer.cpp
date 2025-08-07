@@ -103,5 +103,10 @@ WrapFunctionConsumer::WrapFunctionConsumer(clang::Rewriter &R, const std::string
 }
 
 void WrapFunctionConsumer::HandleTranslationUnit(ASTContext &Context) {
+    Handler.setBaseFolder(BaseFolder);
     Matcher.matchAST(Context);
+}
+
+void WrapFunctionConsumer::setBaseFolder(const std::string &Folder) {
+    BaseFolder = Folder;
 }

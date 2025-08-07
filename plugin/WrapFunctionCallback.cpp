@@ -3,6 +3,7 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/Lex/Lexer.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/Path.h"
 
 WrapFunctionCallback::WrapFunctionCallback(clang::Rewriter &Rewrite,
                                            llvm::StringRef Id)
@@ -19,6 +20,11 @@ void WrapFunctionCallback::run(
 }
 void WrapFunctionCallback::processFunction(const clang::FunctionDecl *Func,
                                            clang::ASTContext *Context) {
+  // Check if function is in base folder
+  if (!isInBaseFolder(Func->getLocation(), Context->getSourceManager())) {
+    return;
+  }
+  
   std::string OriginalName = Func->getNameAsString();
   std::string WrappedName = OriginalName + "__wrapped__";
 
@@ -245,4 +251,34 @@ std::string WrapFunctionCallback::buildWrapperFunction(
   OS << "}\n";
 
   return OS.str();
+}
+
+void WrapFunctionCallback::setBaseFolder(const std::string &Folder) {
+  BaseFolder = Folder;
+}
+
+bool WrapFunctionCallback::isInBaseFolder(clang::SourceLocation Loc, clang::SourceManager &SM) {
+  if (BaseFolder.empty()) {
+    return true; // No base folder specified, process all files
+  }
+  
+  if (!Loc.isValid() || !SM.isInMainFile(Loc)) {
+    return false;
+  }
+  
+  std::string Filename = SM.getFilename(Loc).str();
+  if (Filename.empty()) {
+    return false;
+  }
+  
+  // Convert to absolute path if needed
+  llvm::SmallString<256> AbsPath(Filename);
+  if (!llvm::sys::path::is_absolute(AbsPath)) {
+    if (std::error_code EC = llvm::sys::fs::make_absolute(AbsPath)) {
+      return false;
+    }
+  }
+  
+  // Check if the file is under the base folder
+  return AbsPath.str().starts_with(BaseFolder);
 }

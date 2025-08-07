@@ -13,6 +13,8 @@ public:
 
   void
   run(const clang::ast_matchers::MatchFinder::MatchResult &Result) override;
+  
+  void setBaseFolder(const std::string &BaseFolder);
 
 private:
   void processFunction(const clang::FunctionDecl *Func,
@@ -26,6 +28,9 @@ private:
                                    bool IsConstMethod, bool IsStaticMethod,
                                    const std::string &ClassName, llvm::StringRef Id);
 
+  bool isInBaseFolder(clang::SourceLocation Loc, clang::SourceManager &SM);
+  
   clang::Rewriter &Rewrite;
   llvm::StringRef Id;
+  std::string BaseFolder;
 };
