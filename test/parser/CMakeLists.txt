@@ -15,9 +15,10 @@ target_include_directories(parser_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/plugin/parser  # Include the parser headers
 )
 
-# Link against the parser library and GoogleTest
+# Link against the parser library and LLVM libraries
 target_link_libraries(parser_tests PRIVATE
     SaopParser
+    LLVMSupport
 )
 
 add_dependencies(parser_tests SaopParser)

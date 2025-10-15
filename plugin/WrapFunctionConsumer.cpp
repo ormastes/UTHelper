@@ -92,7 +92,7 @@ WrapFunctionConsumer::WrapFunctionConsumer(clang::Rewriter &R, const std::string
         pointcut->accept(visitor);
         auto matcher = visitor.getMatcher();
         if (matcher->isType(MATCH_RUN)) {
-            auto *runMatcher = dynamic_cast<RunMatcher*>(matcher.get());
+            auto *runMatcher = static_cast<RunMatcher*>(matcher.get());
             assert(runMatcher && "Failed to cast to RunMatcher");
             DeclarationMatcher functionMatcher = runMatcher->getMatcher();
             Matcher.addMatcher(functionMatcher, &Handler);

@@ -3,7 +3,7 @@
 
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/raw_ostream.h"
-#include <llvm-18/llvm/ADT/StringMap.h>
+#include <llvm/ADT/StringMap.h>
 #include <llvm/ADT/StringSet.h>
 
 #include "Common.h" // provides DEBUG_PRINT(x) macro
