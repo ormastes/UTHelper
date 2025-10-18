@@ -1,1 +1,0 @@
-run_pointcut funcDecl = pragma_clang(text, data) || annotation(wrap);

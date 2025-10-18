@@ -30,6 +30,7 @@ else()
         UnifiedASTVisitor.cpp
         PLUGIN_TOOL
         clang
+        PARTIAL_SOURCES_INTENDED
     )
 endif()
 
@@ -93,7 +94,7 @@ else()
     # For Linux, use the shared clang-cpp library
     target_link_libraries(UTHelperPlugin PRIVATE
         SaopParser
-        clang-cpp
+        /usr/lib/llvm-18/lib/libclang-cpp.so.18.1
     )
 endif()
 

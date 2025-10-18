@@ -35,5 +35,4 @@ endif()
 
 target_link_libraries(SaopParser PUBLIC
     ${parser_llvm_libs}
-    clangBasic
 )
