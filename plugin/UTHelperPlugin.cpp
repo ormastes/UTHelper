@@ -35,7 +35,7 @@ public:
 
   void EndSourceFileAction() override {
     clang::SourceManager &SM = Rewrite.getSourceMgr();
-    if (const clang::RewriteBuffer *RewriteBuf = Rewrite.getRewriteBufferFor(SM.getMainFileID())) {
+    if (const llvm::RewriteBuffer *RewriteBuf = Rewrite.getRewriteBufferFor(SM.getMainFileID())) {
         llvm::outs() << std::string(RewriteBuf->begin(), RewriteBuf->end());
     } else {
         // Output the original source code if no transformations were made

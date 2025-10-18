@@ -1,4 +1,8 @@
-add_compile_options(-std=c++20 -fPIC)
+add_compile_options(-std=c++20)
+# Only add -fPIC for non-MSVC compilers
+if(NOT MSVC AND NOT (WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+    add_compile_options(-fPIC)
+endif()
 
 
 add_library(SaopParser 

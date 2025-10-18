@@ -28,6 +28,7 @@ ExternalProject_Add(
     CMAKE_ARGS
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
         -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
         -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
@@ -41,25 +42,34 @@ set(GMOCK_INCLUDE_DIR ${source_dir}/googlemock/include)
 
 # GTest library
 ExternalProject_Get_Property(googletest binary_dir)
-set(GTEST_LIBRARY_PATH ${binary_dir}/lib/libgtest.a)
+# Use .lib for MSVC/Clang-cl, .a for MinGW/GCC
+# Check if we're using MSVC or if compiler target contains "msvc" or "windows-msvc"
+if(MSVC OR WIN32 AND (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM") AND NOT MINGW)
+    set(LIB_PREFIX "")
+    set(LIB_SUFFIX ".lib")
+else()
+    set(LIB_PREFIX "lib")
+    set(LIB_SUFFIX ".a")
+endif()
+set(GTEST_LIBRARY_PATH ${binary_dir}/lib/${LIB_PREFIX}gtest${LIB_SUFFIX})
 set(GTEST_LIBRARY gtest)
 add_library(${GTEST_LIBRARY} UNKNOWN IMPORTED)
 set_property(TARGET ${GTEST_LIBRARY} PROPERTY IMPORTED_LOCATION ${GTEST_LIBRARY_PATH})
 
 # GTest Main library
-set(GTEST_MAIN_LIBRARY_PATH ${binary_dir}/lib/libgtest_main.a)
+set(GTEST_MAIN_LIBRARY_PATH ${binary_dir}/lib/${LIB_PREFIX}gtest_main${LIB_SUFFIX})
 set(GTEST_MAIN_LIBRARY gtest_main)
 add_library(${GTEST_MAIN_LIBRARY} UNKNOWN IMPORTED)
 set_property(TARGET ${GTEST_MAIN_LIBRARY} PROPERTY IMPORTED_LOCATION ${GTEST_MAIN_LIBRARY_PATH})
 
 # GMock library
-set(GMOCK_LIBRARY_PATH ${binary_dir}/lib/libgmock.a)
+set(GMOCK_LIBRARY_PATH ${binary_dir}/lib/${LIB_PREFIX}gmock${LIB_SUFFIX})
 set(GMOCK_LIBRARY gmock)
 add_library(${GMOCK_LIBRARY} UNKNOWN IMPORTED)
 set_property(TARGET ${GMOCK_LIBRARY} PROPERTY IMPORTED_LOCATION ${GMOCK_LIBRARY_PATH})
 
 # GMock Main library
-set(GMOCK_MAIN_LIBRARY_PATH ${binary_dir}/lib/libgmock_main.a)
+set(GMOCK_MAIN_LIBRARY_PATH ${binary_dir}/lib/${LIB_PREFIX}gmock_main${LIB_SUFFIX})
 set(GMOCK_MAIN_LIBRARY gmock_main)
 add_library(${GMOCK_MAIN_LIBRARY} UNKNOWN IMPORTED)
 set_property(TARGET ${GMOCK_MAIN_LIBRARY} PROPERTY IMPORTED_LOCATION ${GMOCK_MAIN_LIBRARY_PATH})
