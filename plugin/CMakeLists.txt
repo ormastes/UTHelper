@@ -93,7 +93,7 @@ else()
     # For Linux, use the shared clang-cpp library
     target_link_libraries(UTHelperPlugin PRIVATE
         SaopParser
-        /build/llvm-project/llvm/build/lib/libclang-cpp.so
+        clang-cpp
     )
 endif()
 

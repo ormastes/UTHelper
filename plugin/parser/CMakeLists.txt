@@ -19,17 +19,21 @@ target_include_directories(SaopParser PUBLIC
 )
 
 # Link against LLVM and Clang libraries
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    # For Windows, use llvm_map_components_to_libnames
-    llvm_map_components_to_libnames(parser_llvm_libs support core)
+llvm_map_components_to_libnames(parser_llvm_libs support core)
 
-    target_link_libraries(SaopParser PUBLIC
-        ${parser_llvm_libs}
-        /build/llvm-project/llvm/build-x86_64-w64-mingw32-static/lib/libclangBasic.a
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    # Add library search path
+    target_link_directories(SaopParser PUBLIC
+        /build/llvm-project/llvm/build-x86_64-w64-mingw32-static/lib
     )
 else()
-    target_link_libraries(SaopParser PUBLIC
-        LLVM
-        /build/llvm-project/llvm/build/lib/libclangBasic.a
+    # Add library search path
+    target_link_directories(SaopParser PUBLIC
+        /build/llvm-project/llvm/build/lib
     )
 endif()
+
+target_link_libraries(SaopParser PUBLIC
+    ${parser_llvm_libs}
+    clangBasic
+)
